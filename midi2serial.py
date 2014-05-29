@@ -18,7 +18,9 @@ def init_arg_parser():
     arg_parser = argparse.ArgumentParser(description='Transmits MIDI messages to serial')
     # Add arguments to the parser
     arg_parser.add_argument('--mididevice','-m', help='MIDI input device', metavar='PORT', required=True, type=int)
-    arg_parser.add_argument('--serialport','-s', help='Serial output port', metavar='PORT', required=True, type=str)
+    arg_parser.add_argument('--serialport','-s', help='Serial port', metavar='PORT', required=True, type=str)
+    arg_parser.add_argument('--baudrate','-b', help='Serial baud rate', metavar='RATE', default=9600, type=int)
+    arg_parser.add_argument('--quiet','-q', help='Disable serial messages printing', action='store_true')
 
     return arg_parser
 
@@ -44,7 +46,7 @@ def bytes_to_string(bytes, separator=' '):
         output_string += separator
     return output_string
 
-def serial_read(ser, rate, stop_event):
+def serial_read(ser, rate, quiet, stop_event):
     """Reads the serial input at the given rate and stops when the stop event is set. Intended to be ran as a thread"""
     # While a thread stop event is not received...
     while (not stop_event.is_set()):
@@ -52,13 +54,14 @@ def serial_read(ser, rate, stop_event):
         data = ser.read(4)
         # If data has been read
         if len(data) > 0:
-            # Print the data
-            print("Serial input:  {}".format(bytes_to_string(data)))
-            sys.stdout.flush()
+            if not quiet:
+                # Print the data
+                print("Serial input:  {}".format(bytes_to_string(data)))
+                sys.stdout.flush()
         # Waits during the given time
         stop_event.wait(rate)
 
-def midi_to_serial(midi_input, ser, stop_event, print_bytes=True):
+def midi_to_serial(midi_input, ser, quiet, stop_event):
     """Reads the midi input and send messages to serial and prints sent messages. Intended to be ran as a thread"""
     # While a thread stop event is not received...
     while (not stop_event.is_set()):
@@ -72,7 +75,7 @@ def midi_to_serial(midi_input, ser, stop_event, print_bytes=True):
                     midi_event_bytes = serialize_midi_event(midi_event)
                     ser.write(midi_event_bytes)
 
-                    if print_bytes:
+                    if not quiet:
                         # Print the message bytes in hexadecimal
                         print("Serial output: {}".format(bytes_to_string(midi_event_bytes)))
                         sys.stdout.flush()
@@ -84,17 +87,18 @@ if __name__ == "__main__":
     args = arg_parser.parse_args()
 
     #Initialize midi and serial with the arguments
-    ser = init_serial(args.serialport)
+    ser = init_serial(args.serialport, args.baudrate)
     midi_input = init_midi_input(args.mididevice)
 
     # Initialize serial reading thread
     serial_read_thread_stop = threading.Event()
-    serial_read_thread = threading.Thread(target=serial_read,args=(ser, 0.001, serial_read_thread_stop))
-
+    serial_read_thread = threading.Thread(target=serial_read,
+                                          args=(ser, 0.001, args.quiet, serial_read_thread_stop))
 
     # Initialize midi to serial thread
     midi_to_serial_thread_stop = threading.Event()
-    midi_to_serial_thread = threading.Thread(target=midi_to_serial, args=(midi_input, ser, midi_to_serial_thread_stop))
+    midi_to_serial_thread = threading.Thread(target=midi_to_serial,
+                                             args=(midi_input, ser, args.quiet, midi_to_serial_thread_stop))
 
     #Start threads
     serial_read_thread.start()
