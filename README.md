@@ -13,7 +13,6 @@ The script has been tested with:
 ## Arguments
 
 ```
-
 usage: midi2serial.py [-h] --mididevice PORT --serialport PORT
                       [--baudrate RATE] [--quiet]
 
@@ -28,34 +27,24 @@ optional arguments:
   --baudrate RATE, -b RATE
                         Serial baud rate
   --quiet, -q           Disable serial messages printing
-
 ```
 
 ## Examples
 
 Listens from MIDI output device 7 and repeat the messages to serial port COM1 at 9600 baud (default baud rate):
-
 ```
-
 python midi2serial.py -m 7 -s COM1
-
 ```
 
 Listens from MIDI output device 7 and repeat the messages to serial port COM1 at 38400 baud:
-
 ```
-
 python midi2serial.py -m 7 -s COM1 -b 38400
-
 ```
 
 Listens from MIDI output device 7 and repeat the messages to serial port COM1 without writing the transmitted messages
 to stdout:
-
 ```
-
 python midi2serial.py -m 7 -s COM1 -q
-
 ```
 
 
