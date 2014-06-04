@@ -1,7 +1,9 @@
 #!/usr/bin/env python
-__author__  = 'Dimitri Lizzi'
-__version__ = '0.1'
-__status__  = 'Prototype'
+__author__    = 'Dimitri Lizzi'
+__copyright__ = 'Copyright 2014, Dimitri Lizzi'
+__license__   = 'GPLv2'
+__version__   = '0.1'
+__status__    = 'Prototype'
 
 
 import argparse
